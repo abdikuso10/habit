@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yawm Wahid — يوم واحد (Day One)
 
-## Getting Started
+A personal 365-day discipline tracker. Everything lives in your browser's
+`localStorage` — there is no backend, no account, and no analytics. Back up
+your data yourself with the export/import tools in the app.
 
-First, run the development server:
+## Local development
+
+Requires Node.js 20+.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). On first run you'll be
+asked to set a password and pick your Day One date. That password is hashed
+with SHA-256 and stored only on this device — it's a privacy screen against
+casual snooping, not real security.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Other useful commands:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build   # production build
+npm run start   # run the production build locally
+npm run lint    # eslint
+```
 
-## Learn More
+## Deploying to Vercel
 
-To learn more about Next.js, take a look at the following resources:
+This is a static, backend-free Next.js app, so deployment is zero-config:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push this repository to GitHub.
+2. Go to [vercel.com/new](https://vercel.com/new) and import the repo, or run
+   `npx vercel` from this directory and follow the prompts.
+3. No environment variables or build settings are required.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Because all data lives in the browser, each device/browser you open the
+deployed app in starts fresh — use **Export backup** / **Import backup** to
+carry your progress between them.
