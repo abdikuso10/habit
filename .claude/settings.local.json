@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack)"
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npm run *)",
+      "Read(//private/tmp/**)",
+      "Bash(npx tsc *)"
     ]
   }
 }
