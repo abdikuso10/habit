@@ -26,10 +26,11 @@ export function clearState(): void {
 export function isTrackerState(value: unknown): value is TrackerState {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
-  if (v.version !== 3) return false;
+  if (v.version !== 4) return false;
   if (typeof v.passwordHash !== "string") return false;
   if (typeof v.dayOneDate !== "string") return false;
   if (typeof v.savingsTotal !== "number") return false;
+  if (typeof v.debtRemaining !== "number") return false;
   if (!v.habitsByPillar || typeof v.habitsByPillar !== "object") return false;
   const hbp = v.habitsByPillar as Record<string, unknown>;
   if (!Array.isArray(hbp.spiritual) || !Array.isArray(hbp.body) || !Array.isArray(hbp.mind))

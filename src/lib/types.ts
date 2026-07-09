@@ -6,14 +6,16 @@ export interface DayRecord {
 }
 
 export const SAVINGS_GOAL = 1_000_000;
+export const STARTING_DEBT = 30_000;
 
 export interface TrackerState {
-  version: 3;
+  version: 4;
   passwordHash: string;
   dayOneDate: string; // YYYY-MM-DD
   savingsTotal: number; // shillings saved, entered manually toward SAVINGS_GOAL
+  debtRemaining: number; // shillings still owed, starts at STARTING_DEBT
   habitsByPillar: Record<PillarId, HabitDef[]>;
   days: Record<string, DayRecord>; // key: YYYY-MM-DD
 }
 
-export const STORAGE_KEY = "yawm-wahid:state:v3";
+export const STORAGE_KEY = "yawm-wahid:state:v4";

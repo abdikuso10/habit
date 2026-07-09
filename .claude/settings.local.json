@@ -5,7 +5,9 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(npm run *)",
       "Read(//private/tmp/**)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(ssh-keygen -lf ~/.ssh/id_ed25519_second.pub)",
+      "Bash(ssh-keygen -lf ~/.ssh/id_rsa.pub)"
     ]
   }
 }
