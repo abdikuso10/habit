@@ -19,7 +19,7 @@ import {
   parseBackupFile,
   saveState,
 } from "./storage";
-import { DayRecord, TrackerState } from "./types";
+import { DayRecord, STARTING_DEBT, TrackerState } from "./types";
 
 const ROLLOVER_CHECK_MS = 30_000;
 
@@ -40,6 +40,7 @@ interface TrackerContextValue {
   setHabitDone: (dateKey: string, habitId: string) => void;
   setJournal: (dateKey: string, text: string) => void;
   addSavings: (amount: number) => void;
+  payDebt: (amount: number) => void;
   addHabit: (pillarId: PillarId, label: string) => void;
   editHabit: (pillarId: PillarId, habitId: string, label: string) => void;
   deleteHabit: (pillarId: PillarId, habitId: string) => void;
@@ -90,10 +91,11 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     async (password: string, dayOneDate: string) => {
       const passwordHash = await sha256Hex(password);
       const next: TrackerState = {
-        version: 3,
+        version: 4,
         passwordHash,
         dayOneDate,
         savingsTotal: 0,
+        debtRemaining: STARTING_DEBT,
         habitsByPillar: defaultHabitsByPillar(),
         days: {},
       };
@@ -191,6 +193,17 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     [state, persist]
   );
 
+  const payDebt = useCallback(
+    (amount: number) => {
+      if (!state || !Number.isFinite(amount) || amount <= 0) return;
+      persist({
+        ...state,
+        debtRemaining: Math.max(0, state.debtRemaining - amount),
+      });
+    },
+    [state, persist]
+  );
+
   const addHabit = useCallback(
     (pillarId: PillarId, label: string) => {
       if (!state || !label.trim()) return;
@@ -284,6 +297,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     setHabitDone,
     setJournal,
     addSavings,
+    payDebt,
     addHabit,
     editHabit,
     deleteHabit,
