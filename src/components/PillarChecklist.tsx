@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { PILLARS_META } from "@/lib/habits";
 import { useTracker } from "@/lib/TrackerContext";
+import { DeepWorkTimer } from "./DeepWorkTimer";
 import { HabitRow } from "./HabitRow";
 import { MeditationTimer } from "./MeditationTimer";
 
@@ -50,6 +51,7 @@ export function PillarChecklist() {
         {PILLARS_META.map((pillar) => {
           const habits = state.habitsByPillar[pillar.id] ?? [];
           const hasMeditation = habits.some((h) => h.id === "meditation");
+          const hasDeepWork = habits.some((h) => h.id === "deepWork");
 
           return (
             <div
@@ -66,7 +68,9 @@ export function PillarChecklist() {
               </div>
               <div className="space-y-0.5">
                 {habits
-                  .filter((habit) => habit.id !== "meditation")
+                  .filter(
+                    (habit) => habit.id !== "meditation" && habit.id !== "deepWork"
+                  )
                   .map((habit) => (
                     <HabitRow
                       key={habit.id}
@@ -82,6 +86,12 @@ export function PillarChecklist() {
               </div>
 
               <AddHabitForm onAdd={(label) => addHabit(pillar.id, label)} />
+
+              {pillar.id === "mind" && hasDeepWork && (
+                <div className="mt-4 border-t border-white/10 pt-4">
+                  <DeepWorkTimer />
+                </div>
+              )}
 
               {pillar.id === "mind" && hasMeditation && (
                 <div className="mt-4 border-t border-white/10 pt-4">
