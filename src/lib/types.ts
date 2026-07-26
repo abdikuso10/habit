@@ -3,10 +3,12 @@ import { HabitDef, PillarId } from "./habits";
 export interface DayRecord {
   habits: Record<string, boolean>;
   journal: string;
+  deepWorkSeconds?: number;
 }
 
 export const SAVINGS_GOAL = 1_000_000;
-export const STARTING_DEBT = 30_000;
+export const STARTING_DEBT = 98000;
+export const DEEP_WORK_TARGET_SECONDS = 4 * 60 * 60;
 
 export interface TrackerState {
   version: 4;

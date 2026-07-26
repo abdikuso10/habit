@@ -19,7 +19,12 @@ import {
   parseBackupFile,
   saveState,
 } from "./storage";
-import { DayRecord, STARTING_DEBT, TrackerState } from "./types";
+import {
+  DayRecord,
+  DEEP_WORK_TARGET_SECONDS,
+  STARTING_DEBT,
+  TrackerState,
+} from "./types";
 
 const ROLLOVER_CHECK_MS = 30_000;
 
@@ -39,6 +44,7 @@ interface TrackerContextValue {
   toggleHabit: (dateKey: string, habitId: string) => void;
   setHabitDone: (dateKey: string, habitId: string) => void;
   setJournal: (dateKey: string, text: string) => void;
+  addDeepWorkSeconds: (dateKey: string, seconds: number) => void;
   addSavings: (amount: number) => void;
   payDebt: (amount: number) => void;
   addHabit: (pillarId: PillarId, label: string) => void;
@@ -185,6 +191,27 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     [state, persist]
   );
 
+  const addDeepWorkSeconds = useCallback(
+    (dateKey: string, seconds: number) => {
+      if (!state || seconds <= 0) return;
+      const day = state.days[dateKey] ?? emptyDay();
+      const totalSeconds = (day.deepWorkSeconds ?? 0) + seconds;
+      const nextDay: DayRecord = {
+        ...day,
+        deepWorkSeconds: totalSeconds,
+        habits:
+          totalSeconds >= DEEP_WORK_TARGET_SECONDS
+            ? { ...day.habits, deepWork: true }
+            : day.habits,
+      };
+      persist({
+        ...state,
+        days: { ...state.days, [dateKey]: nextDay },
+      });
+    },
+    [state, persist]
+  );
+
   const addSavings = useCallback(
     (amount: number) => {
       if (!state || !Number.isFinite(amount) || amount <= 0) return;
@@ -296,6 +323,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     toggleHabit,
     setHabitDone,
     setJournal,
+    addDeepWorkSeconds,
     addSavings,
     payDebt,
     addHabit,
