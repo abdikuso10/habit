@@ -31,6 +31,31 @@ async function asJson<T>(response: Response): Promise<T> {
   return body;
 }
 
+/*
+  Retries a read that failed for a reason that might not still be true.
+
+  A corrupted document is not one of those — the same bytes will fail the same
+  way — so it is rethrown immediately rather than retried three times before
+  showing the user the screen they needed a second ago. Everything else (the
+  server restarting, a hot reload mid-request, a phone moving between wifi and
+  cellular, a dropped packet) is worth another go before giving up.
+*/
+export async function withRetry<T>(operation: () => Promise<T>, delaysMs = [400, 1200, 3000]): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= delaysMs.length; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof CorruptedStateError) throw error;
+      lastError = error;
+      if (attempt < delaysMs.length) {
+        await new Promise((resolve) => setTimeout(resolve, delaysMs[attempt]));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export async function fetchSession(): Promise<SessionInfo> {
   return asJson<SessionInfo>(await fetch("/api/auth/session", { cache: "no-store" }));
 }

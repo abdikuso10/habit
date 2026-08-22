@@ -29,3 +29,50 @@ test("a stored document that fails validation shows the corrupted screen, not a 
   await expect(page.getByText(/check your network/i)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Restore from backup" })).toBeVisible();
 });
+
+/*
+  A read that fails once is not the same as data that is gone.
+
+  The first version of this gave up after a single failed request, so one
+  dropped packet — or a dev-server hot reload landing mid-request — pinned the
+  app on an error screen until the user thought to reload, while the data sat
+  in Postgres untouched. These two cases pin the recovery: silent when the
+  failure is transient, and recoverable in place when it isn't.
+*/
+test("a transient failure at load recovers by itself", async ({ page }) => {
+  await createAccount(page);
+
+  let failures = 0;
+  await page.route("**/api/auth/session", async (route) => {
+    if (failures < 2) {
+      failures += 1;
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /Day \d+ of \d+/ })).toBeVisible({ timeout: 15_000 });
+  expect(failures).toBe(2);
+});
+
+test("a permanent failure shows the screen, and Try again recovers without a reload", async ({ page }) => {
+  await createAccount(page);
+
+  let blocking = true;
+  await page.route("**/api/auth/session", async (route) => {
+    if (blocking) {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /Can't reach your data/i })).toBeVisible({ timeout: 20_000 });
+
+  blocking = false;
+  await page.getByRole("button", { name: /Try again|Trying/ }).click();
+  await expect(page.getByRole("heading", { name: /Day \d+ of \d+/ })).toBeVisible({ timeout: 15_000 });
+});

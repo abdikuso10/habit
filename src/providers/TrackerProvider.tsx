@@ -13,6 +13,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -46,6 +47,7 @@ import {
   logout as remoteLogout,
   putState,
   setupVault,
+  withRetry,
   type SaveStatus,
 } from "@/persistence/remote";
 import {
@@ -101,6 +103,9 @@ export interface TrackerContextValue {
   /** Whether the last write reached the database. With no local copy, a
    * failure here is unsaved work and has to be visible. */
   saveStatus: SaveStatus;
+  /** Re-runs the initial load. Lets the "can't reach your data" screen recover
+   * in place instead of forcing a full page reload. */
+  retryLoad: () => void;
 
   createAccount: (password: string, dayOneDate: string) => Promise<void>;
   unlock: (password: string) => Promise<boolean>;
@@ -210,46 +215,82 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   );
 
   /*
-    Load is now a round trip, not a synchronous read: ask the server who we are,
-    and fetch the vault only once it says we are signed in. Three answers map
-    onto the three screens AppChrome already gates on — no credential means
-    setup, a credential without a session means the lock screen, and both means
-    the app itself.
+    Load is a round trip, not a synchronous read: ask the server who we are, and
+    fetch the vault only once it says we are signed in. Three answers map onto
+    the three screens AppChrome already gates on — no credential means setup, a
+    credential without a session means the lock screen, and both means the app.
+
+    Reads retry, for the same reason writes do. The first version gave up after
+    a single failed request, which meant one dropped packet, one server restart,
+    or a phone changing network pinned the app on an error screen until the user
+    thought to reload — while the data sat there, fine. `withRetry` backs off a
+    few times, and coming back online triggers a fresh attempt.
+  */
+  const cancelledRef = useRef(false);
+
+  const loadFromServer = useCallback(async () => {
+    try {
+      const session = await withRetry(fetchSession);
+      if (cancelledRef.current) return;
+      if (!session.initialized) {
+        setLoadStatus("empty");
+        return;
+      }
+      if (!session.authenticated) {
+        setState(null);
+        setIsUnlocked(false);
+        setLoadStatus("ready");
+        return;
+      }
+      const remote = await withRetry(fetchState);
+      if (cancelledRef.current) return;
+      setState(remote);
+      setIsUnlocked(true);
+      setLoadStatus(remote ? "ready" : "empty");
+    } catch (error) {
+      if (cancelledRef.current) return;
+      // A document the server can read but not validate is a different problem
+      // from a server we can't reach, and needs a different screen. Retrying
+      // wouldn't have helped it either — see withRetry.
+      setLoadStatus(error instanceof CorruptedStateError ? "corrupted" : "unreachable");
+    }
+  }, []);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    // Fetching initial data from an external system — the case the rule's own
+    // docs allow. Every setState inside runs after an await, never synchronously
+    // during this effect, but the rule can't see through the call.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadFromServer();
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [loadFromServer]);
+
+  /*
+    Retrying puts the app back into "loading" first, so the error screen goes
+    away the moment the user asks rather than sitting there through the attempt.
+    The initial load doesn't need this — the status already starts as "loading",
+    and setting it again in the mount effect is a wasted render.
+  */
+  const retryLoad = useCallback(() => {
+    setLoadStatus("loading");
+    void loadFromServer();
+  }, [loadFromServer]);
+
+  /*
+    The browser tells us when connectivity comes back, which is a better signal
+    than any polling interval: it fires exactly when a retry has a chance of
+    working. Only acted on while we're actually stuck, so a brief drop mid-use
+    doesn't throw away unsaved in-memory state by reloading underneath it.
   */
   useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const session = await fetchSession();
-        if (cancelled) return;
-        if (!session.initialized) {
-          setLoadStatus("empty");
-          return;
-        }
-        if (!session.authenticated) {
-          setState(null);
-          setIsUnlocked(false);
-          setLoadStatus("ready");
-          return;
-        }
-        const remote = await fetchState();
-        if (cancelled) return;
-        setState(remote);
-        setIsUnlocked(true);
-        setLoadStatus(remote ? "ready" : "empty");
-      } catch (error) {
-        if (cancelled) return;
-        // A document the server can read but not validate is a different
-        // problem from a server we can't reach, and needs a different screen.
-        setLoadStatus(error instanceof CorruptedStateError ? "corrupted" : "unreachable");
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (loadStatus !== "unreachable") return;
+    const onOnline = () => retryLoad();
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [loadStatus, retryLoad]);
 
   // Roll "today" over at midnight without requiring a manual refresh.
   useEffect(() => {
@@ -818,6 +859,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     journalSaveStatus,
     corruptedBackupKey,
     saveStatus,
+    retryLoad,
     createAccount,
     unlock,
     lock,
