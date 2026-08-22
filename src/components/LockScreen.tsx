@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useTracker } from "@/lib/TrackerContext";
+import { useTracker } from "@/providers/TrackerProvider";
 
 export function LockScreen() {
   const { unlock } = useTracker();
@@ -14,11 +14,18 @@ export function LockScreen() {
     e.preventDefault();
     setChecking(true);
     setError("");
-    const ok = await unlock(password);
-    setChecking(false);
-    if (!ok) {
-      setError("That password doesn't match.");
-      setPassword("");
+    try {
+      const ok = await unlock(password);
+      if (!ok) {
+        setError("That password doesn't match.");
+        setPassword("");
+      }
+    } catch {
+      // The password may well be right — we never got to ask. Saying it didn't
+      // match would send the user hunting for a problem that isn't there.
+      setError("Couldn't reach your data. Check your connection and try again.");
+    } finally {
+      setChecking(false);
     }
   }
 

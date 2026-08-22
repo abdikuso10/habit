@@ -2,8 +2,12 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { todayKey } from "@/lib/date";
-import { useTracker } from "@/lib/TrackerContext";
+import { daysBetween, formatFullDate, JOURNEY_END_DATE, todayKey } from "@/domain/date";
+import { useTracker } from "@/providers/TrackerProvider";
+
+/* Mirrors the server's rule in src/app/api/auth/setup/route.ts — a client
+   minimum lower than the server's just produces a rejected request. */
+const MIN_PASSWORD_LENGTH = 8;
 
 export function SetupScreen() {
   const { createAccount } = useTracker();
@@ -17,17 +21,28 @@ export function SetupScreen() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 4) {
-      setError("Choose a password with at least 4 characters.");
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Choose a password with at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
     if (password !== confirm) {
       setError("Passwords don't match.");
       return;
     }
+    if (!dayOneDate || daysBetween(dayOneDate, JOURNEY_END_DATE) < 0) {
+      setError(`Choose a start date on or before ${formatFullDate(JOURNEY_END_DATE)}.`);
+      return;
+    }
 
     setSubmitting(true);
-    await createAccount(password, dayOneDate);
+    try {
+      await createAccount(password, dayOneDate);
+    } catch (error) {
+      // Setup writes to the database, so it can fail for reasons that have
+      // nothing to do with what was typed.
+      setError(error instanceof Error ? error.message : "Couldn't create your vault. Please try again.");
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -66,7 +81,7 @@ export function SetupScreen() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-white/10 bg-night px-3.5 py-2.5 text-parchment placeholder:text-slate/60 outline-none focus-visible:ring-2 focus-visible:ring-gold"
-              placeholder="At least 4 characters"
+              placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
             />
           </div>
 
@@ -99,9 +114,16 @@ export function SetupScreen() {
               id="dayOne"
               type="date"
               value={dayOneDate}
+              max={JOURNEY_END_DATE}
               onChange={(e) => setDayOneDate(e.target.value)}
               className="w-full rounded-lg border border-white/10 bg-night px-3.5 py-2.5 text-parchment outline-none focus-visible:ring-2 focus-visible:ring-gold [color-scheme:dark]"
             />
+          </div>
+
+          <div className="rounded-xl border border-gold/20 bg-gold/5 px-4 py-3">
+            <p className="text-xs uppercase tracking-[0.16em] text-gold">Finish line</p>
+            <p className="mt-1 text-sm text-parchment">Friday, 9 July 2027</p>
+            <p className="mt-1 text-xs text-slate">Every day from your start date through the finish is included.</p>
           </div>
 
           {error && (
@@ -119,9 +141,10 @@ export function SetupScreen() {
           </button>
 
           <p className="text-xs leading-relaxed text-slate/80">
-            This password is hashed and kept only on this device. It&apos;s a
-            privacy screen, not a vault — anyone with access to this
-            browser&apos;s storage could bypass it.
+            This password is hashed on the server and checked there, so it
+            actually guards your data rather than just hiding it. Your entries
+            are stored in the database, not on this device — keep an exported
+            backup, and remember there is no way to reset a password you forget.
           </p>
         </form>
       </motion.div>
