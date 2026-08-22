@@ -22,7 +22,7 @@ export function AnimatedNumber({
 
     if (prefersReducedMotion) {
       prevRef.current = value;
-      node.textContent = `${Math.round(value).toLocaleString()}${suffix}`;
+      node.textContent = `${Math.round(value).toLocaleString("en-US")}${suffix}`;
       return;
     }
 
@@ -31,7 +31,7 @@ export function AnimatedNumber({
       duration: 0.6,
       ease: "easeOut",
       onUpdate(v) {
-        node.textContent = `${Math.round(v).toLocaleString()}${suffix}`;
+        node.textContent = `${Math.round(v).toLocaleString("en-US")}${suffix}`;
       },
       onComplete() {
         prevRef.current = value;
@@ -40,9 +40,11 @@ export function AnimatedNumber({
     return () => controls.stop();
   }, [value, suffix, prefersReducedMotion]);
 
+  // Numbers stay left-to-right and in Latin digits even inside an RTL page —
+  // mechanically mirroring a figure like "42%" would misread it.
   return (
-    <span ref={ref} className={className}>
-      {Math.round(value).toLocaleString()}
+    <span ref={ref} dir="ltr" className={className}>
+      {Math.round(value).toLocaleString("en-US")}
       {suffix}
     </span>
   );

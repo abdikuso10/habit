@@ -1,24 +1,76 @@
 @import "tailwindcss";
 
+/*
+  Palette: the passage of the sun.
+
+  This app's day is already structured by the five prayers, so the colour
+  system is the sky at those hours rather than a UI accent ramp — cool violet
+  before dawn, brass at the height of the day, amber as the shadows lengthen,
+  red at sunset, deep blue at night. Each cue anchor carries its own hour's
+  hue, which is what makes the daily screen legible at a glance: you can see
+  what time of day you're looking at before you read a word.
+
+  The ground is a blue-black rather than a neutral one. This is a screen read
+  before Fajr and again before sleep, so a dark ground is functional, but a
+  warm parchment ink over cold indigo keeps it from reading as a dashboard.
+
+  The older token names (night/panel/parchment/gold/slate/green/clay) are kept
+  as aliases pointing at the new values, so every existing component picks up
+  the new palette without being rewritten.
+*/
+
 :root {
-  /* Black + green palette. */
-  --color-night: #08090a;
-  --color-panel: #17181a;
-  --color-parchment: #f0f0ee;
-  --color-gold: #22c55e;
-  --color-green: #3f8f5c;
-  --color-slate: #9a9a9e;
-  --color-clay: #b8433a;
+  /* Ground and structure */
+  --ground: #0e1119;
+  --ground-raised: #161b27;
+  --ground-sunk: #0a0d14;
+  --hairline: #262d3d;
+
+  /* Ink */
+  --ink: #e9e3d6;
+  --ink-dim: #a2a9ba;
+  --ink-faint: #838c9f;
+
+  /* The hours. Ordered as the day runs. */
+  /* Every hue here is also used as heading text on --ground-raised, so each
+     one clears 4.5:1 against it. The cool end of the ramp had to be lifted
+     well above a literal night sky to stay readable — legibility wins over
+     naturalism. */
+  --hour-wake: #8e92d6;
+  --hour-fajr: #a3a2e0;
+  --hour-morning: #d8a93b;
+  --hour-dhuhr: #e9c04a;
+  --hour-asr: #df8b3a;
+  --hour-maghrib: #db7365;
+  --hour-isha: #7e9bdc;
+  --hour-night: #8b90c4;
+
+  /* State. A muted sage for "kept" — the point is steadiness, not a jolt. */
+  --kept: #7cb497;
+  --alert: #db7365;
+
+  /* Aliases kept for the components written against the previous palette. */
+  --color-night: var(--ground);
+  --color-panel: var(--ground-raised);
+  --color-parchment: var(--ink);
+  --color-gold: var(--hour-dhuhr);
+  --color-green: var(--kept);
+  --color-slate: var(--ink-dim);
+  --color-clay: var(--alert);
 }
 
 @theme inline {
-  --color-night: var(--color-night);
-  --color-panel: var(--color-panel);
-  --color-parchment: var(--color-parchment);
-  --color-gold: var(--color-gold);
-  --color-green: var(--color-green);
-  --color-slate: var(--color-slate);
-  --color-clay: var(--color-clay);
+  --color-night: var(--ground);
+  --color-panel: var(--ground-raised);
+  --color-sunk: var(--ground-sunk);
+  --color-hairline: var(--hairline);
+  --color-parchment: var(--ink);
+  --color-slate: var(--ink-dim);
+  --color-faint: var(--ink-faint);
+  --color-gold: var(--hour-dhuhr);
+  --color-green: var(--kept);
+  --color-kept: var(--kept);
+  --color-clay: var(--alert);
 
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -27,46 +79,55 @@
 }
 
 body {
-  background: var(--color-night);
-  color: var(--color-parchment);
-  background-image: repeating-linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.015) 0px,
-      rgba(255, 255, 255, 0.015) 1px,
-      transparent 1px,
-      transparent 6px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(255, 255, 255, 0.015) 0px,
-      rgba(255, 255, 255, 0.015) 1px,
-      transparent 1px,
-      transparent 6px
-    );
+  background: var(--ground);
+  color: var(--ink);
+  /* A single, very low vertical wash — the sky is lighter toward the horizon.
+     Replaces the old cross-hatch, which read as texture noise at any size. */
+  background-image: radial-gradient(
+    120% 80% at 50% 0%,
+    rgba(132, 131, 204, 0.07) 0%,
+    rgba(14, 17, 25, 0) 60%
+  );
+  background-attachment: fixed;
 }
 
-.dawn-line {
+/*
+  The hour rule: a hairline at the top of the page tinted to the current
+  anchor's hue. It's the quietest possible way to say what time it is.
+  --hour-now is set from the client (see AppChrome); it falls back to the
+  pre-dawn violet so the server-rendered HTML is never colourless.
+*/
+.hour-line {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   z-index: 50;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--color-slate) 15%,
-    var(--color-gold) 50%,
-    var(--color-slate) 85%,
+    var(--hour-now, var(--hour-fajr)) 30%,
+    var(--hour-now, var(--hour-fajr)) 70%,
     transparent 100%
   );
-  opacity: 0.85;
+  opacity: 0.9;
   pointer-events: none;
+  transition: background 600ms ease;
 }
 
 ::selection {
-  background: var(--color-gold);
-  color: var(--color-parchment);
+  background: var(--hour-dhuhr);
+  color: var(--ground);
+}
+
+/* Numerals never mirror in RTL: "42%" read right-to-left is a different
+   number, so figures stay left-to-right regardless of locale. */
+.numeric {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 @media (prefers-reduced-motion: reduce) {
