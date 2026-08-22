@@ -6,6 +6,20 @@ import { TrackerState } from "./types";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+/*
+  A stored document that fails validation is not the same failure as a network
+  that is down, and the user needs to be told apart from the other: one is
+  "check your connection", the other is "restore from a backup". The API
+  answers 422 for the first, so it gets its own error type rather than being
+  flattened into a generic fetch failure.
+*/
+export class CorruptedStateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CorruptedStateError";
+  }
+}
+
 export interface SessionInfo {
   initialized: boolean;
   authenticated: boolean;
@@ -50,7 +64,12 @@ export async function logout(): Promise<void> {
 }
 
 export async function fetchState(): Promise<TrackerState | null> {
-  const body = await asJson<{ state: TrackerState | null }>(await fetch("/api/state", { cache: "no-store" }));
+  const response = await fetch("/api/state", { cache: "no-store" });
+  if (response.status === 422) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new CorruptedStateError(body.error || "The stored data failed validation.");
+  }
+  const body = await asJson<{ state: TrackerState | null }>(response);
   return body.state;
 }
 

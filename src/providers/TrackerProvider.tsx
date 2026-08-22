@@ -38,6 +38,7 @@ import {
   previewImport,
 } from "@/persistence/importExport";
 import {
+  CorruptedStateError,
   createWriteQueue,
   fetchSession,
   fetchState,
@@ -237,8 +238,11 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
         setState(remote);
         setIsUnlocked(true);
         setLoadStatus(remote ? "ready" : "empty");
-      } catch {
-        if (!cancelled) setLoadStatus("unreachable");
+      } catch (error) {
+        if (cancelled) return;
+        // A document the server can read but not validate is a different
+        // problem from a server we can't reach, and needs a different screen.
+        setLoadStatus(error instanceof CorruptedStateError ? "corrupted" : "unreachable");
       }
     })();
 
