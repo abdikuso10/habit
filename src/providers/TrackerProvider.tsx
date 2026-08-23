@@ -368,11 +368,26 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     async (password: string, dayOneDate: string) => {
       await setupVault(password);
       const next = createInitialState(SERVER_MANAGED_PASSWORD, dayOneDate);
-      persist(next);
+      /*
+        The seed document goes straight out instead of through the write queue.
+        The queue is deliberately fire-and-forget, which is right for a habit
+        tick and wrong for the one write that decides whether the account has
+        anything in it at all. Pushed and forgotten, a failure here left a
+        credential with no vault: setup reported success, the app opened to a
+        day with every habit missing, and nothing on screen said why — while
+        /api/auth/setup answers 409 from then on, so the user could not retry
+        their way out of it either.
+
+        Awaiting it means setup either finishes or reports why it didn't;
+        SetupScreen already renders whatever this throws. The retry is the same
+        one reads get: a dropped packet should not cost someone their account.
+      */
+      await withRetry(() => putState(next));
+      setState(next);
       setLoadStatus("ready");
       setIsUnlocked(true);
     },
-    [persist]
+    []
   );
 
   const unlock = useCallback(async (password: string) => {
