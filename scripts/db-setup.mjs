@@ -3,9 +3,11 @@
 import { readFileSync } from "node:fs";
 import pg from "pg";
 
-const url = process.env.DATABASE_URL;
+// Either name works, matching src/server/db.ts: Vercel's Neon integration sets
+// DATABASE_URL, Vercel Postgres sets POSTGRES_URL.
+const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 if (!url) {
-  console.error("DATABASE_URL is not set. Pass it via --env-file=.env.local or the environment.");
+  console.error("No connection string. Set DATABASE_URL (or POSTGRES_URL) via --env-file or the environment.");
   process.exit(1);
 }
 
