@@ -15,12 +15,26 @@ import ws from "ws";
   and local development exercises the same SQL that production runs.
 */
 
-const url = process.env.DATABASE_URL;
+/*
+  Vercel names the connection string differently depending on which integration
+  is attached: the Neon marketplace integration sets DATABASE_URL, while Vercel
+  Postgres sets POSTGRES_URL and never sets DATABASE_URL at all. Reading only
+  the first meant the second failed on its first query with "DATABASE_URL is not
+  set" — which the app then showed as "can't reach your data", sending the user
+  after a network problem when the real one was an unset variable.
 
+  POSTGRES_PRISMA_URL is deliberately not consulted: it carries pgbouncer and
+  connect_timeout parameters meant for Prisma's pooling rather than ours.
+
+  Read per call rather than once at module load, so the value comes from the
+  environment the server is actually running in — see
+  node_modules/next/dist/docs/01-app/02-guides/environment-variables.md.
+*/
 function connectionString(): string {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!url) {
     throw new Error(
-      "DATABASE_URL is not set. Add it in Vercel (Storage -> your Neon database) or to .env.local for local development."
+      "No database connection string. Set DATABASE_URL (or POSTGRES_URL) in Vercel (Storage -> your database), or in .env.local for local development."
     );
   }
   return url;

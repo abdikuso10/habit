@@ -6,6 +6,20 @@ import { TrackerState } from "./types";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+/*
+  A stored document that fails validation is not the same failure as a network
+  that is down, and the user needs to be told apart from the other: one is
+  "check your connection", the other is "restore from a backup". The API
+  answers 422 for the first, so it gets its own error type rather than being
+  flattened into a generic fetch failure.
+*/
+export class CorruptedStateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CorruptedStateError";
+  }
+}
+
 export interface SessionInfo {
   initialized: boolean;
   authenticated: boolean;
@@ -15,6 +29,31 @@ async function asJson<T>(response: Response): Promise<T> {
   const body = (await response.json().catch(() => ({}))) as T & { error?: string };
   if (!response.ok) throw new Error(body.error || `Request failed (${response.status})`);
   return body;
+}
+
+/*
+  Retries a read that failed for a reason that might not still be true.
+
+  A corrupted document is not one of those — the same bytes will fail the same
+  way — so it is rethrown immediately rather than retried three times before
+  showing the user the screen they needed a second ago. Everything else (the
+  server restarting, a hot reload mid-request, a phone moving between wifi and
+  cellular, a dropped packet) is worth another go before giving up.
+*/
+export async function withRetry<T>(operation: () => Promise<T>, delaysMs = [400, 1200, 3000]): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= delaysMs.length; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof CorruptedStateError) throw error;
+      lastError = error;
+      if (attempt < delaysMs.length) {
+        await new Promise((resolve) => setTimeout(resolve, delaysMs[attempt]));
+      }
+    }
+  }
+  throw lastError;
 }
 
 export async function fetchSession(): Promise<SessionInfo> {
@@ -50,7 +89,12 @@ export async function logout(): Promise<void> {
 }
 
 export async function fetchState(): Promise<TrackerState | null> {
-  const body = await asJson<{ state: TrackerState | null }>(await fetch("/api/state", { cache: "no-store" }));
+  const response = await fetch("/api/state", { cache: "no-store" });
+  if (response.status === 422) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new CorruptedStateError(body.error || "The stored data failed validation.");
+  }
+  const body = await asJson<{ state: TrackerState | null }>(response);
   return body.state;
 }
 

@@ -28,15 +28,15 @@ export function CorruptedDataScreen({ preservedKey }: { preservedKey: string | n
       <div className="w-full max-w-md rounded-2xl border border-clay/40 bg-panel p-6 sm:p-8">
         <h1 className="font-display text-2xl text-parchment">Your data couldn&apos;t be read</h1>
         <p className="mt-3 text-sm leading-relaxed text-slate">
-          Something in this browser&apos;s storage was unreadable. Nothing has been deleted or overwritten — the
-          original, unreadable data is still sitting in this browser&apos;s storage
+          The stored data didn&apos;t pass validation, so the app won&apos;t use it rather than risk showing you
+          something wrong. Nothing has been deleted or overwritten — the original row is still in the database
           {preservedKey ? (
             <>
               {" "}
-              under the key <code className="rounded bg-night px-1.5 py-0.5 text-xs text-gold">{preservedKey}</code>
+              (preserved as <code className="rounded bg-night px-1.5 py-0.5 text-xs text-gold">{preservedKey}</code>)
             </>
           ) : null}
-          {" "}in case it needs manual recovery.
+          {" "}and can be inspected directly.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-slate">
           If you have an exported backup file, restore it here to get going again immediately.
