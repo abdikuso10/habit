@@ -28,6 +28,7 @@ import { computeAllHabitStrengths, HabitStrength } from "@/domain/automaticity";
 import { calcStreak } from "@/domain/completion";
 import { Insight, computeInsights } from "@/domain/insights";
 import { DayRecovery, HabitRisk, computeAllHabitRisks, computeDayRecovery } from "@/domain/recovery";
+import { DayReview, computeDayReview } from "@/domain/dayReview";
 import { createTransaction } from "@/domain/finance";
 import { flattenHabits, generateHabitId } from "@/domain/habits";
 import { elapsedSeconds } from "@/domain/timer";
@@ -167,6 +168,8 @@ export interface TrackerContextValue {
   habitRisks: HabitRisk[];
   habitStrengths: HabitStrength[];
   dayRecovery: DayRecovery | null;
+  /** Yesterday, scored per sector, for the morning-after dialog. */
+  dayReview: DayReview | null;
 
   timer: RunningTimerState | null;
   startTimer: (kind: "focus" | "meditation", targetSeconds?: number) => void;
@@ -848,6 +851,17 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     [state, journey.effectiveToday]
   );
 
+  /*
+    Keyed off `today` rather than journey.effectiveToday: the review reports on
+    the calendar day that just ended, and effectiveToday is clamped to the
+    journey window, which would keep re-reporting the final day forever once
+    the journey ends.
+  */
+  const dayReview = useMemo(
+    () => (state ? computeDayReview(state, today) : null),
+    [state, today]
+  );
+
   const insights = useMemo(() => {
     if (!state) return [];
     return computeInsights({
@@ -908,6 +922,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     habitRisks,
     habitStrengths,
     dayRecovery,
+    dayReview,
     timer: state?.timer ?? null,
     startTimer,
     stopTimer,

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useCurrentAnchor } from "@/hooks/useCurrentAnchor";
 import { ANCHOR_HUE } from "./anchorStyles";
 import { CorruptedDataScreen } from "./CorruptedDataScreen";
+import { DayReviewDialog } from "./DayReviewDialog";
 import { Header } from "./Header";
 import { LockScreen } from "./LockScreen";
 import { SetupScreen } from "./SetupScreen";
@@ -70,6 +71,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {/* Rendered here rather than on the Today page so the report is the first
+          thing seen whichever route was opened — a bookmark to Week or Journey
+          should not skip the morning after. */}
+      <DayReviewDialog />
       <Header />
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">{children}</main>
     </>
