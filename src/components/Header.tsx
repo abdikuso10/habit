@@ -6,6 +6,7 @@ import { formatFullDate, JOURNEY_END_DATE } from "@/domain/date";
 import { useTracker } from "@/providers/TrackerProvider";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { Nav } from "./Nav";
+import { Tachometer } from "./Tachometer";
 import { SettingsDialog } from "./SettingsDialog";
 
 export function Header() {
@@ -15,7 +16,7 @@ export function Header() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <header className="border-b border-white/10">
+    <header className="site-header border-b border-white/10">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -28,9 +29,13 @@ export function Header() {
               of <span className="font-numeric">{totalJourneyDays}</span>
             </h1>
             <p className="mt-1 text-sm text-slate">{formatFullDate(today, locale)}</p>
-            <p className="mt-2 text-xs text-slate">
+            <p className="mt-2 text-xs uppercase tracking-[0.14em] text-slate">
               {daysRemaining === 0 ? "Journey complete" : `${daysRemaining} days to ${formatFullDate(JOURNEY_END_DATE, locale)}`}
             </p>
+          </div>
+
+          <div className="hidden md:block">
+            <Tachometer percent={journeyProgressPct} />
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -65,6 +70,8 @@ export function Header() {
             </button>
           </div>
         </div>
+
+        <p className="motto font-display text-sm font-semibold sm:text-base">Speed and consistency.</p>
 
         <div>
           <div className="mb-1.5 flex justify-between text-[11px] text-slate">

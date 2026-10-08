@@ -4,7 +4,7 @@ import { query, queryOne } from "@/server/db";
 
 export const dynamic = "force-dynamic";
 
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 4;
 
 /*
   First-run only. Guarded by an INSERT that can only succeed when no credential

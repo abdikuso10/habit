@@ -21,15 +21,15 @@
 
 :root {
   /* Ground and structure */
-  --ground: #0e1119;
-  --ground-raised: #161b27;
-  --ground-sunk: #0a0d14;
-  --hairline: #262d3d;
+  --ground: #0a0a0b;
+  --ground-raised: #141416;
+  --ground-sunk: #060607;
+  --hairline: #2a2a2e;
 
   /* Ink */
-  --ink: #e9e3d6;
-  --ink-dim: #a2a9ba;
-  --ink-faint: #838c9f;
+  --ink: #f3f3f1;
+  --ink-dim: #a9a9b0;
+  --ink-faint: #8b8b93;
 
   /* The hours. Ordered as the day runs. */
   /* Every hue here is also used as heading text on --ground-raised, so each
@@ -53,7 +53,9 @@
   --color-night: var(--ground);
   --color-panel: var(--ground-raised);
   --color-parchment: var(--ink);
-  --color-gold: var(--hour-dhuhr);
+  --brass: #4cc3e8; /* Miami Blue. The one accent token: change it here and the whole app follows. */
+  --on-accent: #06141c;
+  --color-gold: var(--brass);
   --color-green: var(--kept);
   --color-slate: var(--ink-dim);
   --color-clay: var(--alert);
@@ -67,7 +69,7 @@
   --color-parchment: var(--ink);
   --color-slate: var(--ink-dim);
   --color-faint: var(--ink-faint);
-  --color-gold: var(--hour-dhuhr);
+  --color-gold: var(--brass);
   --color-green: var(--kept);
   --color-kept: var(--kept);
   --color-clay: var(--alert);
@@ -83,11 +85,11 @@ body {
   color: var(--ink);
   /* A single, very low vertical wash — the sky is lighter toward the horizon.
      Replaces the old cross-hatch, which read as texture noise at any size. */
-  background-image: radial-gradient(
-    120% 80% at 50% 0%,
-    rgba(132, 131, 204, 0.07) 0%,
-    rgba(14, 17, 25, 0) 60%
-  );
+  background-image:
+    radial-gradient(90% 60% at 50% -10%, rgba(76, 195, 232, 0.10) 0%, rgba(10, 10, 11, 0) 70%),
+    radial-gradient(60% 40% at 100% 100%, rgba(255, 255, 255, 0.035) 0%, rgba(10, 10, 11, 0) 70%);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   background-attachment: fixed;
 }
 
@@ -128,6 +130,222 @@ body {
   font-variant-numeric: tabular-nums;
   direction: ltr;
   unicode-bidi: isolate;
+}
+
+/*
+  Motion: sections settle into place on load, staggered so the eye is led down
+  the page in reading order. Cards lift a hair on hover. Kept short and
+  one-shot — a tracker opened several times a day can't afford an intro.
+*/
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-rise > * {
+  animation: rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.page-rise > :nth-child(2) { animation-delay: 60ms; }
+.page-rise > :nth-child(3) { animation-delay: 120ms; }
+.page-rise > :nth-child(4) { animation-delay: 180ms; }
+.page-rise > :nth-child(5) { animation-delay: 240ms; }
+.page-rise > :nth-child(n + 6) { animation-delay: 300ms; }
+
+.page-rise > section,
+.page-rise > details {
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+.page-rise > section:hover,
+.page-rise > details:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+/*
+  Surfaces. Panels read as lightly raised glass: a faint top-lit gradient, a
+  one-pixel highlight along the upper edge, and borders pulled back so the
+  content, not the boxes, carries the page. Unlayered on purpose, so these
+  refine every existing card without touching its markup.
+*/
+.bg-panel,
+.bg-panel\/60 {
+  /* Carbon-fibre twill: two offset diagonal weaves under a top-lit sheen. */
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.028) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.028) 75%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.028) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.028) 75%);
+  background-size: 100% 100%, 6px 6px, 6px 6px;
+  background-position: 0 0, 0 0, 3px 3px;
+}
+.rounded-2xl {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 10px 30px -18px rgba(0, 0, 0, 0.7);
+}
+.border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.075);
+}
+
+/* Instrument-cluster lettering: condensed, capitalised, widely spaced. */
+.font-display {
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+h1.font-display,
+h2.font-display,
+h3.font-display {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Sharper geometry: panels and controls are machined, not pillowy. */
+.rounded-2xl { border-radius: 10px; }
+.rounded-xl { border-radius: 8px; }
+.rounded-lg { border-radius: 6px; }
+
+/* Primary actions: blue with dark lettering and a faint sheen. */
+.bg-gold {
+  color: var(--on-accent);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 60%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 6px 16px -8px rgba(76, 195, 232, 0.55);
+}
+
+header.site-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+  border-bottom-color: transparent;
+  position: relative;
+}
+/* Racing stripes down the left edge of the header: accent, then a white pinstripe. */
+header.site-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 7px;
+  background: linear-gradient(90deg, var(--brass) 0 4px, transparent 4px 5px, #f3f3f1 5px 6px, transparent 6px);
+}
+header.site-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(76, 195, 232, 0.7), transparent);
+}
+
+/* Lock and setup: a quiet spotlight behind the card. */
+.auth-stage {
+  position: relative;
+  isolation: isolate;
+}
+.auth-stage::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 420px;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgba(76, 195, 232, 0.12), rgba(216, 182, 110, 0));
+  filter: blur(8px);
+}
+.wordmark-rule {
+  display: block;
+  width: 48px;
+  height: 1px;
+  margin: 14px auto 0;
+  background: linear-gradient(90deg, transparent, var(--brass), transparent);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #34343a transparent;
+}
+
+/*
+  Porsche-style motion: quick, mechanical, decisive. Sheens travel across
+  metal, stripes draw in, and controls respond with a short ease-out rather
+  than a bounce.
+*/
+@keyframes stripe-draw {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+header.site-header::before {
+  transform-origin: top;
+  animation: stripe-draw 700ms cubic-bezier(0.2, 0.8, 0.2, 1) 150ms both;
+}
+
+@keyframes sheen {
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to { transform: translateX(260%) skewX(-20deg); }
+}
+header.site-header::after {
+  background-size: 200% 100%;
+}
+.hour-line {
+  overflow: hidden;
+}
+
+/* A glint crosses primary buttons on hover. */
+.bg-gold {
+  position: relative;
+  overflow: hidden;
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+.bg-gold::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  pointer-events: none;
+}
+.bg-gold:hover::after {
+  animation: sheen 650ms ease-out;
+}
+button.bg-gold:active,
+a.bg-gold:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+/* Interactive rows and chips press in like switchgear. */
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* The accent line under the header breathes once on load, then holds. */
+@keyframes line-in {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+header.site-header::after {
+  transform-origin: center;
+  animation: line-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 250ms both;
+}
+
+/* Watches and gauges rise with a short tilt, like a dial coming into view. */
+@keyframes dial-in {
+  from { opacity: 0; transform: scale(0.92) rotate(-6deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+svg[role="img"][aria-label*="watch"] {
+  animation: dial-in 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.motto {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-style: normal;
+  background: linear-gradient(90deg, #ffffff, #f3f3f1 55%, var(--brass));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

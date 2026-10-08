@@ -30,7 +30,7 @@ export function LockScreen() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-16">
+    <main className="auth-stage flex min-h-screen items-center justify-center px-4 py-16">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -42,6 +42,7 @@ export function LockScreen() {
           <h1 className="font-display text-3xl text-parchment">
             Yawm Wahid
           </h1>
+          <span className="wordmark-rule" aria-hidden="true" />
         </div>
 
         <form
@@ -58,6 +59,7 @@ export function LockScreen() {
             <input
               id="unlock-password"
               type="password"
+              inputMode="numeric"
               autoFocus
               autoComplete="current-password"
               value={password}

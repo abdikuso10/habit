@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Figtree, IBM_Plex_Mono, Amiri } from "next/font/google";
+import { Barlow, Barlow_Condensed, IBM_Plex_Mono, Amiri } from "next/font/google";
 import { MotionConfig } from "framer-motion";
 import { AppChrome } from "@/components/AppChrome";
 import { LocaleEffect } from "@/components/LocaleEffect";
@@ -7,20 +7,19 @@ import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistratio
 import { TrackerProvider } from "@/providers/TrackerProvider";
 import "./globals.css";
 
-// Fraunces carries the personality: an old-style serif with real warmth and
-// a slight wonkiness that sits comfortably beside Amiri's calligraphic
-// Arabic, without the polished neutrality of a standard display serif.
-const fraunces = Fraunces({
+// Display type is a condensed grotesque set in capitals — the lettering of an
+// instrument cluster. Barlow is the closest open face to that register; the
+// body face is its regular-width sibling so the two sit together.
+const barlowCondensed = Barlow_Condensed({
   variable: "--font-display",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
+  weight: ["500", "600", "700"],
 });
 
-// Figtree does the reading work — humanist, warm, and quiet enough to leave
-// the display face and the hour colours as the things you notice.
-const figtree = Figtree({
+const barlow = Barlow({
   variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -48,7 +47,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e1119",
+  themeColor: "#0a0a0b",
   width: "device-width",
   initialScale: 1,
 };
@@ -62,7 +61,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${fraunces.variable} ${figtree.variable} ${ibmPlexMono.variable} ${amiri.variable} h-full antialiased`}
+      className={`${barlowCondensed.variable} ${barlow.variable} ${ibmPlexMono.variable} ${amiri.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-night text-parchment font-body">
         <a

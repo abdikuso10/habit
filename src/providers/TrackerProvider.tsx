@@ -233,6 +233,14 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
 
   const loadFromServer = useCallback(async () => {
     try {
+      // The state request starts alongside the session check instead of after
+      // it: when you're signed in (the usual case) that removes one whole
+      // round trip from every load. A single un-retried attempt, so a locked
+      // vault's 401 is simply ignored rather than retried in the background.
+      const speculative = fetchState().then(
+        (value) => ({ ok: true as const, value }),
+        (error: unknown) => ({ ok: false as const, error })
+      );
       const session = await withRetry(fetchSession);
       if (cancelledRef.current) return;
       if (!session.initialized) {
@@ -245,7 +253,9 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
         setLoadStatus("ready");
         return;
       }
-      const remote = await withRetry(fetchState);
+      const first = await speculative;
+      if (!first.ok && first.error instanceof CorruptedStateError) throw first.error;
+      const remote = first.ok ? first.value : await withRetry(fetchState);
       if (cancelledRef.current) return;
       setState(remote);
       setIsUnlocked(true);

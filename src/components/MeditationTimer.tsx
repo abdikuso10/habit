@@ -4,6 +4,7 @@ import { Check, Pause, Play, RotateCcw } from "lucide-react";
 import { formatMs } from "@/domain/timer";
 import { useNowTick } from "@/hooks/useNowTick";
 import { useTracker } from "@/providers/TrackerProvider";
+import { WatchFace } from "./WatchFace";
 
 export function MeditationTimer() {
   const { state, today, getDayRecord, timer, startTimer, stopTimer, timerElapsedSeconds, updateSettings } = useTracker();
@@ -49,30 +50,42 @@ export function MeditationTimer() {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <span dir="ltr" className="font-numeric text-2xl tabular-nums text-parchment" aria-live="off">
-          {formatMs(secondsLeft)}
-        </span>
-        <button
-          type="button"
-          onClick={() => (isRunning ? stopTimer() : startTimer("meditation", defaultMinutes * 60))}
-          disabled={!isRunning && secondsLeft === 0}
-          aria-label={isRunning ? "Pause meditation timer" : "Start meditation timer"}
-          className="flex min-h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-parchment transition hover:border-white/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        >
-          {isRunning ? <Pause size={13} aria-hidden="true" /> : <Play size={13} aria-hidden="true" />}
-          {isRunning ? "Pause" : "Start"}
-        </button>
-        {isRunning && (
-          <button
-            type="button"
-            onClick={stopTimer}
-            className="flex min-h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate transition hover:text-parchment focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-          >
-            <RotateCcw size={13} aria-hidden="true" />
-            Stop &amp; save
-          </button>
-        )}
+      <div className="flex flex-wrap items-center gap-4">
+        <WatchFace
+          seconds={secondsLeft}
+          progress={targetSeconds > 0 ? elapsed / targetSeconds : 0}
+          running={isRunning}
+          done={done}
+          label="Stillness"
+          ariaLabel={`Meditation watch, ${formatMs(secondsLeft)} left`}
+        />
+        <div className="space-y-2">
+          <span dir="ltr" className="block font-numeric text-2xl tabular-nums text-parchment" aria-live="off">
+            {formatMs(secondsLeft)}
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => (isRunning ? stopTimer() : startTimer("meditation", defaultMinutes * 60))}
+              disabled={!isRunning && secondsLeft === 0}
+              aria-label={isRunning ? "Pause meditation timer" : "Start meditation timer"}
+              className="flex min-h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-parchment transition hover:border-white/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            >
+              {isRunning ? <Pause size={13} aria-hidden="true" /> : <Play size={13} aria-hidden="true" />}
+              {isRunning ? "Pause" : "Start"}
+            </button>
+            {isRunning && (
+              <button
+                type="button"
+                onClick={stopTimer}
+                className="flex min-h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate transition hover:text-parchment focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              >
+                <RotateCcw size={13} aria-hidden="true" />
+                Stop &amp; save
+              </button>
+            )}
+          </div>
+        </div>
       </div>
       <p role="status" aria-live="polite" className="sr-only">
         {secondsLeft === 0 && isRunning ? "Meditation session complete." : ""}

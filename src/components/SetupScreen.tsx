@@ -7,7 +7,7 @@ import { useTracker } from "@/providers/TrackerProvider";
 
 /* Mirrors the server's rule in src/app/api/auth/setup/route.ts — a client
    minimum lower than the server's just produces a rejected request. */
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 4;
 
 export function SetupScreen() {
   const { createAccount } = useTracker();
@@ -46,7 +46,7 @@ export function SetupScreen() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-16">
+    <main className="auth-stage flex min-h-screen items-center justify-center px-4 py-16">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -58,6 +58,7 @@ export function SetupScreen() {
           <h1 className="font-display text-3xl text-parchment">
             Yawm Wahid
           </h1>
+          <span className="wordmark-rule" aria-hidden="true" />
           <p className="mt-2 text-sm text-slate">
             Day One. Set a password and choose the date this begins.
           </p>
@@ -77,11 +78,12 @@ export function SetupScreen() {
             <input
               id="password"
               type="password"
+              inputMode="numeric"
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-white/10 bg-night px-3.5 py-2.5 text-parchment placeholder:text-slate/60 outline-none focus-visible:ring-2 focus-visible:ring-gold"
-              placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+              placeholder={`At least ${MIN_PASSWORD_LENGTH} digits`}
             />
           </div>
 
@@ -95,6 +97,7 @@ export function SetupScreen() {
             <input
               id="confirm"
               type="password"
+              inputMode="numeric"
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}

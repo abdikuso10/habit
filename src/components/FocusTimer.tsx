@@ -4,6 +4,7 @@ import { Check, Pause, Play } from "lucide-react";
 import { formatHms } from "@/domain/timer";
 import { useNowTick } from "@/hooks/useNowTick";
 import { useTracker } from "@/providers/TrackerProvider";
+import { WatchFace } from "./WatchFace";
 
 /*
   Deliberate-practice research puts the sustainable daily ceiling at about
@@ -59,20 +60,25 @@ export function FocusTimer() {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <span dir="ltr" className="font-numeric text-2xl tabular-nums text-parchment" aria-live="off">
-          {formatHms(displaySeconds)}
-        </span>
-        <span className="text-xs text-slate">/ {formatHms(targetSeconds)}</span>
-        <button
-          type="button"
-          onClick={() => (isRunning ? stopTimer() : startTimer("focus", targetSeconds))}
-          aria-label={isRunning ? "Pause focus timer" : "Start focus timer"}
-          className="flex min-h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-parchment transition hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        >
-          {isRunning ? <Pause size={13} aria-hidden="true" /> : <Play size={13} aria-hidden="true" />}
-          {isRunning ? "Pause" : "Start"}
-        </button>
+      <div className="flex flex-wrap items-center gap-4">
+        <WatchFace seconds={displaySeconds} progress={pct / 100} running={isRunning} done={done} label="Focus" ariaLabel={`Focus watch, ${pct}% of today's target`} />
+        <div className="space-y-2">
+          <div className="flex items-baseline gap-2">
+            <span dir="ltr" className="font-numeric text-2xl tabular-nums text-parchment" aria-live="off">
+              {formatHms(displaySeconds)}
+            </span>
+            <span className="text-xs text-slate">/ {formatHms(targetSeconds)}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => (isRunning ? stopTimer() : startTimer("focus", targetSeconds))}
+            aria-label={isRunning ? "Pause focus timer" : "Start focus timer"}
+            className="flex min-h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-parchment transition hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            {isRunning ? <Pause size={13} aria-hidden="true" /> : <Play size={13} aria-hidden="true" />}
+            {isRunning ? "Pause" : "Start"}
+          </button>
+        </div>
       </div>
 
       {runningElsewhere && (
