@@ -71,6 +71,8 @@ import { todayKey as getTodayKey, getJourneyWindow } from "@/domain/date";
 
 const ROLLOVER_CHECK_MS = 30_000;
 const TIMER_SAFETY_FLUSH_MS = 15_000;
+/** How long without any input before the app locks itself. */
+const AUTO_LOCK_MS = 5_000;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -419,6 +421,44 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     setState(null);
     void remoteLogout();
   }, []);
+
+  /*
+    Auto-lock. Any input counts as activity; five quiet seconds ends the session
+    and returns to the lock screen. Two guards keep that from costing data:
+    it never fires while a write is still unsaved (it waits for the next tick),
+    and coming back to the tab re-checks at once, because browsers throttle
+    timers in background tabs and a 1-second interval can't be trusted there.
+    Closing the tab sends a logout beacon, so reopening the app asks again.
+  */
+  useEffect(() => {
+    if (!isUnlocked) return;
+    let lastActivity = Date.now();
+    const touch = () => {
+      lastActivity = Date.now();
+    };
+    const check = () => {
+      if (Date.now() - lastActivity < AUTO_LOCK_MS) return;
+      if (writeQueue.hasUnsaved()) return;
+      lock();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    const onPageHide = () => {
+      if (!writeQueue.hasUnsaved()) navigator.sendBeacon?.("/api/auth/logout");
+    };
+    const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "scroll"] as const;
+    for (const name of events) window.addEventListener(name, touch, { passive: true, capture: true });
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pagehide", onPageHide);
+    const interval = setInterval(check, 1000);
+    return () => {
+      for (const name of events) window.removeEventListener(name, touch, { capture: true });
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pagehide", onPageHide);
+      clearInterval(interval);
+    };
+  }, [isUnlocked, lock, writeQueue]);
 
   const getDayRecord = useCallback(
     (dateKey: string): DayRecord => state?.days[dateKey] ?? emptyDay(),

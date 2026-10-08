@@ -26,7 +26,15 @@ const scrypt = promisify(scryptCb) as (p: string | Buffer, s: string | Buffer, k
 
 const KEY_LENGTH = 64;
 export const SESSION_COOKIE = "yawm_session";
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
+/*
+  A session is short and slides: every authenticated read or write of the vault
+  pushes the expiry forward, and the cookie carries no max-age, so it is a
+  browser-session cookie as well. A month-long cookie meant the app opened
+  straight into your data on any later visit, which is the opposite of a lock.
+  The client also ends the session after a few seconds of inactivity; this
+  window is the backstop for when it can't (browser killed, phone asleep).
+*/
+const SESSION_MAX_AGE_SECONDS = 10 * 60;
 
 export interface Credential {
   password_hash: string;
@@ -95,7 +103,7 @@ export async function setSessionCookie(secret: string): Promise<void> {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
+    // No maxAge: a session cookie, dropped when the browser closes.
   });
 }
 
@@ -105,11 +113,13 @@ export async function clearSessionCookie(): Promise<void> {
 }
 
 /** True when the request carries a valid, unexpired session for this install. */
-export async function isAuthenticated(): Promise<boolean> {
+export async function isAuthenticated(options: { refresh?: boolean } = {}): Promise<boolean> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return false;
   const credential = await readCredential();
   if (!credential) return false;
-  return tokenIsValid(token, credential.session_secret);
+  const valid = tokenIsValid(token, credential.session_secret);
+  if (valid && options.refresh) await setSessionCookie(credential.session_secret);
+  return valid;
 }

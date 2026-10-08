@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 */
 
 async function guard(): Promise<NextResponse | null> {
-  if (await isAuthenticated()) return null;
+  if (await isAuthenticated({ refresh: true })) return null;
   return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 }
 
