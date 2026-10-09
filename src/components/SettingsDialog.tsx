@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePrayerNotificationSetting } from "@/hooks/usePrayerNotificationSetting";
 import { TrackerState } from "@/persistence/types";
 import { useTracker } from "@/providers/TrackerProvider";
 import { BackupTools } from "./BackupTools";
@@ -36,6 +37,7 @@ function SettingsForm({
   updateSettings: (patch: Partial<Pick<TrackerState["settings"], "locale" | "focusTargetMinutes" | "meditationDefaultMinutes">>) => void;
   updateMoneySettings: (patch: Partial<TrackerState["settings"]["money"]>) => void;
 }) {
+  const prayer = usePrayerNotificationSetting();
   const [currency, setCurrency] = useState(state.settings.money.currency);
   const [savingsGoal, setSavingsGoal] = useState(state.settings.money.savingsGoal);
   const [startingDebt, setStartingDebt] = useState(state.settings.money.startingDebt);
@@ -80,6 +82,29 @@ function SettingsForm({
             العربية
           </label>
         </div>
+      </div>
+
+      <div>
+        <span className="mb-1.5 block text-xs text-slate">Prayer notifications</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={prayer.status === "on"}
+          disabled={prayer.status === "denied" || prayer.status === "unsupported"}
+          onClick={() => prayer.setEnabled(prayer.status !== "on")}
+          className={`min-h-11 w-full rounded-lg border px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:opacity-60 ${
+            prayer.status === "on" ? "border-gold/60 bg-gold/15 text-gold" : "border-white/10 text-slate"
+          }`}
+        >
+          {prayer.status === "on" ? "On — notify me at each prayer" : "Off — tap to enable"}
+        </button>
+        <p className="mt-1.5 text-xs text-slate">
+          {prayer.status === "denied"
+            ? "Notifications are blocked for this site. Allow them in your browser settings."
+            : prayer.status === "unsupported"
+              ? "This browser doesn't support notifications."
+              : "Times are calculated for Nairobi. Delivered while the app is open or installed and running in the background."}
+        </p>
       </div>
 
       <div>

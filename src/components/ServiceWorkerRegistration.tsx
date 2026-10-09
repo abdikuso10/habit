@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 /** Registers the app-shell service worker in production only, and surfaces a
  * small, dismissible "update available" banner instead of forcing a reload.
- * Never requests notification permission — installability and offline
- * loading don't require it, and reminders (if ever added) must stay opt-in. */
+ * Never requests notification permission itself — that only happens when the
+ * user turns on prayer notifications in Settings. */
 export function ServiceWorkerRegistration() {
   const [updateReady, setUpdateReady] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);

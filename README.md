@@ -194,7 +194,8 @@ Because all data lives in the browser, each device/browser you open the
 deployed app in starts fresh — use **Export backup** / **Import backup** to
 carry your progress between them. The app also installs as a PWA (web app
 manifest + a minimal app-shell service worker registered in production) and
-opens offline; it never prompts for notification permission.
+opens offline. Notification permission is requested only if you turn on
+prayer notifications in Settings.
 
 One caveat the E2E suite made concrete: the service worker installs on your
 first visit but doesn't control that page load, so the assets it fetched were
@@ -210,8 +211,9 @@ Deliberate scope decisions, documented rather than silently skipped:
   debounced writes, but the underlying store is still `localStorage`.
 - **PWA support is minimal.** Manifest, icons, and a cache-first app-shell
   service worker with an update-available banner are included; there is no
-  push-notification flow (by design — reminders must stay opt-in and are not
-  implemented in this pass).
+  server push. Opt-in prayer notifications (Settings, Nairobi times computed
+  on-device) fire only while the app is open or running in the background; a
+  closed app can't notify.
 - **i18n is "lite."** Locale (English/Arabic), currency, and RTL layout are
   supported and toggleable from Settings, with locale-aware number/date
   formatting — but not every UI string is translated into Arabic yet. Numeric
