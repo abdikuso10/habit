@@ -91,14 +91,13 @@ export function YearGrid() {
           View the year as a list (text alternative to the grid above)
         </summary>
         <ul className="mt-2 max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-white/10 bg-night p-3 text-xs text-slate">
-          {days
-            .filter((d) => !d.isFuture)
-            .map((d) => (
-              <li key={d.dateKey}>
-                Day {d.dayNumber} ({formatShortDate(d.dateKey)}): {d.isSpecial ? "excused" : `${d.pct}%`}
-                {d.keptCount > 0 ? `, ${d.keptCount} promise${d.keptCount === 1 ? "" : "s"} kept` : ""}
-              </li>
-            ))}
+          {days.map((d) => (
+            <li key={d.dateKey}>
+              Day {d.dayNumber} ({formatShortDate(d.dateKey)}):{" "}
+              {d.isFuture ? "upcoming" : d.isSpecial ? "excused" : `${d.pct}%`}
+              {!d.isFuture && d.keptCount > 0 ? `, ${d.keptCount} promise${d.keptCount === 1 ? "" : "s"} kept` : ""}
+            </li>
+          ))}
         </ul>
       </details>
     </section>
