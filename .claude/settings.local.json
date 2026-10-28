@@ -7,7 +7,12 @@
       "Read(//private/tmp/**)",
       "Bash(npx tsc *)",
       "Bash(ssh-keygen -lf ~/.ssh/id_ed25519_second.pub)",
-      "Bash(ssh-keygen -lf ~/.ssh/id_rsa.pub)"
+      "Bash(ssh-keygen -lf ~/.ssh/id_rsa.pub)",
+      "Bash(kill -9 43885 44196 44197)",
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(lsof -nP -iTCP:3001 -sTCP:LISTEN)",
+      "Bash(curl -sS http://localhost:3000/ -o /tmp/page.html -w \"%{http_code}\\\\n\")",
+      "Read(//tmp/**)"
     ]
   }
 }
