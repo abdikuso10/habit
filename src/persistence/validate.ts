@@ -34,6 +34,12 @@ function isDayRecord(v: unknown): boolean {
   if (!isRecord(v)) return false;
   if (!isRecord(v.habits)) return false;
   if (typeof v.journal !== "string") return false;
+  if (v.todos !== undefined) {
+    if (!Array.isArray(v.todos)) return false;
+    if (!v.todos.every((t) => isRecord(t) && typeof t.id === "string" && typeof t.text === "string" && typeof t.done === "boolean")) {
+      return false;
+    }
+  }
   return true;
 }
 

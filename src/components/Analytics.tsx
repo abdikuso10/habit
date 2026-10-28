@@ -29,6 +29,7 @@ export function Analytics() {
         <Stat label="Current streak" value={analytics.currentStreak} suffix="d" />
         <Stat label="Best streak" value={analytics.bestStreak} suffix="d" />
         <Stat label="Promise points" value={analytics.promisePoints} />
+        <Stat label="List points" value={analytics.todoPoints} />
         <Stat label="Scheduled completion" value={analytics.scheduledCompletionPct} suffix="%" />
         <Stat label="Minimum-day consistency" value={analytics.minimumConsistencyPct} suffix="%" />
         <Stat label="Target-day consistency" value={analytics.targetConsistencyPct} suffix="%" />

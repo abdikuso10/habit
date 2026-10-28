@@ -6,6 +6,7 @@ import { addDays, dayOfWeek, daysBetween, getJourneyWindow, JOURNEY_END_DATE, mo
 import { calcStreak, bestStreak as computeBestStreak, completionPct, computeDayLevels, pillarCompletionPct } from "./completion";
 import { commitmentsKeptInWeekOf, commitmentsKeptOn, promisePoints } from "./commitments";
 import { debtProgressPct, savingsProgressPct } from "./finance";
+import { totalTodoPoints } from "./todos";
 import { flattenHabits, isHabitScheduledOnDay, isHabitCompletedOnDay } from "./habits";
 import { Habit, PILLARS_META, TrackerState } from "@/persistence/types";
 
@@ -52,6 +53,7 @@ export interface Analytics {
   bestStreak: number;
   currentStreak: number;
   promisePoints: number;
+  todoPoints: number;
   promisesKeptToday: number;
   promisesKeptThisWeek: number;
   pendingPromises: number;
@@ -134,6 +136,7 @@ export function computeAnalytics(state: TrackerState, todayKey: string): Analyti
     bestStreak: computeBestStreak(state, effectiveToday),
     currentStreak: calcStreak(state, effectiveToday),
     promisePoints: promisePoints(state.commitments),
+    todoPoints: totalTodoPoints(state.days),
     promisesKeptToday: commitmentsKeptOn(state.commitments, todayKey).length,
     promisesKeptThisWeek: commitmentsKeptInWeekOf(state.commitments, todayKey).length,
     pendingPromises: state.commitments.filter((c) => c.status === "pending").length,

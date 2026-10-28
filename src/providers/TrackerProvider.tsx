@@ -29,6 +29,7 @@ import { calcStreak } from "@/domain/completion";
 import { Insight, computeInsights } from "@/domain/insights";
 import { DayRecovery, HabitRisk, computeAllHabitRisks, computeDayRecovery } from "@/domain/recovery";
 import { DayReview, computeDayReview } from "@/domain/dayReview";
+import { createTodo } from "@/domain/todos";
 import { createTransaction } from "@/domain/finance";
 import { flattenHabits, generateHabitId } from "@/domain/habits";
 import { elapsedSeconds } from "@/domain/timer";
@@ -120,6 +121,9 @@ export interface TrackerContextValue {
   setSpecialDay: (dateKey: string, state: SpecialDayState) => void;
   setIntention: (dateKey: string, text: string) => void;
   setReflection: (dateKey: string, text: string) => void;
+  addTodo: (dateKey: string, text: string) => void;
+  toggleTodo: (dateKey: string, id: string) => void;
+  deleteTodo: (dateKey: string, id: string) => void;
 
   setJournal: (dateKey: string, text: string) => void;
   toggleJournalFavorite: (dateKey: string) => void;
@@ -506,6 +510,27 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
 
   const setIntention = useCallback(
     (dateKey: string, text: string) => mutateDay(dateKey, (day) => ({ ...day, intention: text })),
+    [mutateDay]
+  );
+
+  const addTodo = useCallback(
+    (dateKey: string, text: string) => {
+      if (!text.trim()) return;
+      mutateDay(dateKey, (day) => ({ ...day, todos: [...(day.todos ?? []), createTodo(text)] }));
+    },
+    [mutateDay]
+  );
+  const toggleTodo = useCallback(
+    (dateKey: string, id: string) =>
+      mutateDay(dateKey, (day) => ({
+        ...day,
+        todos: (day.todos ?? []).map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+      })),
+    [mutateDay]
+  );
+  const deleteTodo = useCallback(
+    (dateKey: string, id: string) =>
+      mutateDay(dateKey, (day) => ({ ...day, todos: (day.todos ?? []).filter((t) => t.id !== id) })),
     [mutateDay]
   );
 
@@ -947,6 +972,9 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     setHabitValue,
     setSpecialDay,
     setIntention,
+    addTodo,
+    toggleTodo,
+    deleteTodo,
     setReflection,
     setJournal,
     toggleJournalFavorite,

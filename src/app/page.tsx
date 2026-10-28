@@ -13,6 +13,7 @@ import { PendingCommitments } from "@/components/PendingCommitments";
 import { RecoveryBanner } from "@/components/RecoveryBanner";
 import { ReflectionInput } from "@/components/ReflectionInput";
 import { SpecialDayPicker } from "@/components/SpecialDayPicker";
+import { TodayList } from "@/components/TodayList";
 
 /*
   Today is for acting, not for reviewing.
@@ -46,6 +47,8 @@ export default function TodayPage() {
       </div>
 
       <CueTimeline />
+
+      <TodayList />
 
       <PendingCommitments />
       <CommitmentQuickEntry />

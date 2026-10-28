@@ -92,6 +92,14 @@ export interface Commitment {
 
 export type SpecialDayState = "normal" | "rest" | "sick" | "travel" | "recovery";
 
+/** A one-off task on a single day's list. Added without a version bump: the
+ * field is optional on DayRecord, so older data reads as an empty list. */
+export interface TodoItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface DayRecord {
   /** Checkbox-metric completion, and the historical v4 shape. */
   habits: Record<string, boolean>;
@@ -108,6 +116,8 @@ export interface DayRecord {
   /** undefined/"normal" = an ordinary day. */
   specialState?: SpecialDayState;
   intention?: string;
+  /** Today's list. Each completed item is a point. */
+  todos?: TodoItem[];
 }
 
 export type MoneyAccount = "savings" | "debt";
