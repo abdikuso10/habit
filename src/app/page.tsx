@@ -3,17 +3,21 @@
 import { CommitmentQuickEntry } from "@/components/CommitmentQuickEntry";
 import { CueTimeline } from "@/components/CueTimeline";
 import { DayArc } from "@/components/DayArc";
+import { DayNavigator } from "@/components/DayNavigator";
 import { DayLevelProgress } from "@/components/DayLevelProgress";
 import { HabitLibrary } from "@/components/HabitLibrary";
 import { InsightList } from "@/components/InsightList";
 import { IntentionInput } from "@/components/IntentionInput";
 import { Journal } from "@/components/Journal";
 import { MoneyAccountCard } from "@/components/MoneyAccountCard";
+import { PastDayView } from "@/components/PastDayView";
 import { PendingCommitments } from "@/components/PendingCommitments";
 import { RecoveryBanner } from "@/components/RecoveryBanner";
 import { ReflectionInput } from "@/components/ReflectionInput";
 import { SpecialDayPicker } from "@/components/SpecialDayPicker";
 import { TodayList } from "@/components/TodayList";
+import { useTracker } from "@/providers/TrackerProvider";
+import { useState } from "react";
 
 /*
   Today is for acting, not for reviewing.
@@ -36,8 +40,24 @@ import { TodayList } from "@/components/TodayList";
 */
 
 export default function TodayPage() {
+  const { state, today } = useTracker();
+  // null means "follow today", so the view rolls over with midnight instead of
+  // staying pinned to a day that has since become the past.
+  const [picked, setPicked] = useState<string | null>(null);
+  const viewDate = picked && picked < today ? picked : today;
+
+  if (viewDate !== today && state) {
+    return (
+      <>
+        <DayNavigator viewDate={viewDate} today={today} earliest={state.dayOneDate} onChange={(k) => setPicked(k === today ? null : k)} />
+        <PastDayView dateKey={viewDate} />
+      </>
+    );
+  }
+
   return (
     <>
+      {state && <DayNavigator viewDate={today} today={today} earliest={state.dayOneDate} onChange={(k) => setPicked(k === today ? null : k)} />}
       <DayArc />
       <RecoveryBanner />
 
