@@ -73,7 +73,7 @@ import { todayKey as getTodayKey, getJourneyWindow } from "@/domain/date";
 const ROLLOVER_CHECK_MS = 30_000;
 const TIMER_SAFETY_FLUSH_MS = 15_000;
 /** How long without any input before the app locks itself. */
-const AUTO_LOCK_MS = 5_000;
+const AUTO_LOCK_MS = 15_000;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -427,11 +427,25 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /*
-    Auto-lock. Any input counts as activity; five quiet seconds ends the session
-    and returns to the lock screen. Two guards keep that from costing data:
-    it never fires while a write is still unsaved (it waits for the next tick),
-    and coming back to the tab re-checks at once, because browsers throttle
-    timers in background tabs and a 1-second interval can't be trusted there.
+    Read by the auto-lock below through a ref, so the effect doesn't tear down
+    and re-subscribe its listeners on every state change.
+  */
+  const timerRunningRef = useRef(false);
+  const timerRunning = Boolean(state?.timer);
+  useEffect(() => {
+    timerRunningRef.current = timerRunning;
+  }, [timerRunning]);
+
+  /*
+    Auto-lock. Any input counts as activity; AUTO_LOCK_MS of quiet ends the
+    session and returns to the lock screen. Three guards:
+    - It never fires while a write is still unsaved (it waits for the next tick).
+    - It never fires while a focus or meditation timer is running. Sitting still
+      is the point of a meditation, and locking mid-session would hide the timer
+      you're watching. The running time counts as activity, so the countdown
+      starts fresh once the timer stops rather than locking the instant it does.
+    - Coming back to the tab re-checks at once, because browsers throttle timers
+      in background tabs and a 1-second interval can't be trusted there.
     Closing the tab sends a logout beacon, so reopening the app asks again.
   */
   useEffect(() => {
@@ -441,6 +455,10 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
       lastActivity = Date.now();
     };
     const check = () => {
+      if (timerRunningRef.current) {
+        touch();
+        return;
+      }
       if (Date.now() - lastActivity < AUTO_LOCK_MS) return;
       if (writeQueue.hasUnsaved()) return;
       lock();
